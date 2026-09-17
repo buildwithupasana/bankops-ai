@@ -1,0 +1,107 @@
+[
+  {
+    "account_id": "ACC001",
+    "customer_id": "CUST001",
+    "currency": "AED",
+    "account_type": "CURRENT",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC002",
+    "customer_id": "CUST002",
+    "currency": "USD",
+    "account_type": "SAVINGS",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC003",
+    "customer_id": "CUST003",
+    "currency": "EUR",
+    "account_type": "CURRENT",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC004",
+    "customer_id": "CUST004",
+    "currency": "GBP",
+    "account_type": "SAVINGS",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC005",
+    "customer_id": "CUST005",
+    "currency": "AED",
+    "account_type": "CURRENT",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC006",
+    "customer_id": "CUST006",
+    "currency": "USD",
+    "account_type": "SAVINGS",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC007",
+    "customer_id": "CUST007",
+    "currency": "EUR",
+    "account_type": "CURRENT",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC008",
+    "customer_id": "CUST008",
+    "currency": "GBP",
+    "account_type": "SAVINGS",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC009",
+    "customer_id": "CUST009",
+    "currency": "AED",
+    "account_type": "CURRENT",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC010",
+    "customer_id": "CUST010",
+    "currency": "USD",
+    "account_type": "SAVINGS",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC011",
+    "customer_id": "CUST001",
+    "currency": "EUR",
+    "account_type": "CURRENT",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC012",
+    "customer_id": "CUST002",
+    "currency": "GBP",
+    "account_type": "SAVINGS",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC013",
+    "customer_id": "CUST003",
+    "currency": "AED",
+    "account_type": "CURRENT",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC014",
+    "customer_id": "CUST004",
+    "currency": "USD",
+    "account_type": "SAVINGS",
+    "is_synthetic": true
+  },
+  {
+    "account_id": "ACC015",
+    "customer_id": "CUST005",
+    "currency": "EUR",
+    "account_type": "CURRENT",
+    "is_synthetic": true
+  }
+]

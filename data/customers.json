@@ -1,0 +1,72 @@
+[
+  {
+    "customer_id": "CUST001",
+    "name": "Synthetic Amal Noor",
+    "city": "Dubai",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST002",
+    "name": "Synthetic Omar Saif",
+    "city": "Abu Dhabi",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST003",
+    "name": "Synthetic Mariam Nader",
+    "city": "Sharjah",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST004",
+    "name": "Synthetic Khalid Rami",
+    "city": "Ajman",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST005",
+    "name": "Synthetic Sara Hadi",
+    "city": "Ras Al Khaimah",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST006",
+    "name": "Synthetic Yousef Zain",
+    "city": "Dubai",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST007",
+    "name": "Synthetic Leila Sami",
+    "city": "Abu Dhabi",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST008",
+    "name": "Synthetic Rashid Kareem",
+    "city": "Sharjah",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST009",
+    "name": "Synthetic Hana Faris",
+    "city": "Ajman",
+    "country": "AE",
+    "is_synthetic": true
+  },
+  {
+    "customer_id": "CUST010",
+    "name": "Synthetic Tariq Adel",
+    "city": "Ras Al Khaimah",
+    "country": "AE",
+    "is_synthetic": true
+  }
+]
