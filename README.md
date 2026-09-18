@@ -2,6 +2,30 @@
 
 AI-Powered Banking Payment Investigation Assistant ? an incremental learning project using synthetic data only.
 
+## Phase 2: Banking REST APIs
+
+The JSON banking service is now accessible through FastAPI. Start here: [Phase 2 learning guide](docs/phase-2-guide.md).
+
+Run in **PowerShell**, from the project root (exit the Python `>>>` prompt first):
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Open http://127.0.0.1:8000/docs for Swagger UI. Use a second terminal for commands and tests; stop the server with Ctrl+C.
+
+```powershell
+curl.exe -i http://127.0.0.1:8000/transactions/TXN001
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+All routes are GET: `/health`, `/customers/{customer_id}`, `/customers/{customer_id}/accounts`, `/accounts/{account_id}`, `/accounts/{account_id}/transactions`, `/transactions/{transaction_id}`.
+
+Missing resources (including parents of collections) return 404. Existing parents with no children return 200 and `[]`. Broken backing data returns 500. `/health` is application liveness, not a data readiness check. This is a local synthetic-data learning API; authentication is not implemented in this phase.
+
+New files: `backend/main.py`, `backend/banking/routes.py`, `backend/banking/models.py`, `requirements.txt`, `tests/test_api.py`, and the Phase 2 guide. Development dependencies now include runtime dependencies and HTTPX for API tests. The Phase 1 demonstration still works.
+
 ## Phase 1: Python and JSON banking system
 
 This milestone contains 10 fictional customers, 15 accounts, and 50 transactions. The service retrieves facts; it does not investigate causes or move money. Runtime code uses only the Python standard library. Use Python 3.10 or newer.
@@ -88,6 +112,6 @@ Unreadable files, malformed JSON, invalid list/object structure, and missing or 
 
 ## Milestone checkpoint
 
-Completed: the Phase 1 Python/JSON foundation. Learn the lookup and relationship concepts before proceeding. No further phase is implemented. The next milestone will be agreed after you confirm these commands and tests work.
+Completed: Phase 1 JSON foundation and Phase 2 REST API. Stop after Phase 2 until its behavior and learning checklist are confirmed.
 
-Suggested Git commit: `feat: add synthetic JSON banking data and lookup service`
+Suggested Git commit: `feat: expose banking lookups through FastAPI with response models and tests`
