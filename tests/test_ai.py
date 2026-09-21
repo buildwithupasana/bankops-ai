@@ -19,7 +19,7 @@ RESULT = dict(issue_type="payment_not_received", transaction_id="TXN001", amount
 def sdk(monkeypatch):
     monkeypatch.setattr(service, "load_dotenv", lambda *a, **k: None)
     monkeypatch.setenv("OPENROUTER_API_KEY", "unit-test-placeholder")
-    monkeypatch.setenv("OPENROUTER_MODEL", "openai/gpt-4o")
+    monkeypatch.setenv("OPENROUTER_MODEL", "nex-agi/nex-n2.5-mini:free")
     factory = MagicMock()
     client = factory.return_value.__enter__.return_value
     client.chat.completions.parse.return_value = SimpleNamespace(choices=[SimpleNamespace(finish_reason="stop", message=SimpleNamespace(refusal=None, parsed=TriageResult(**RESULT)))])
@@ -37,7 +37,7 @@ def test_extraction_request_and_response(sdk):
     assert args["response_format"] is TriageResult
     assert args["messages"][1] == {"role": "user", "content": MESSAGE}
     assert args["messages"][0]["role"] == "system"
-    assert args["extra_body"] == {"provider": {"require_parameters": True}}
+    assert args["extra_body"] == {"provider": {"require_parameters": True}, "reasoning": {"enabled": False}}
     assert factory.call_args.kwargs["base_url"] == "https://openrouter.ai/api/v1"
     assert "tools" not in args
     assert factory.call_args.kwargs["max_retries"] == 0
@@ -72,6 +72,10 @@ def test_safe_provider_errors(sdk, kind, expected, caplog):
     with TestClient(app) as api:
         response = api.post("/ai/triage", json={"message":MESSAGE})
     assert response.status_code == expected
+    if kind == "auth":
+        assert "upstream 401" in response.json()["detail"]
+    if kind == "rate":
+        assert "upstream 429" in response.json()["detail"]
     assert "unit-test-placeholder" not in response.text + caplog.text
 
 
@@ -115,20 +119,37 @@ def test_real_sdk_schema_and_parsing_without_network(monkeypatch):
         captured.update(json.loads(request.content))
         return httpx.Response(200, json={
             "id": "chatcmpl_test", "object": "chat.completion", "created": 0,
-            "model": "openai/gpt-4o",
+            "model": "nex-agi/nex-n2.5-mini:free",
             "choices": [{"index": 0, "finish_reason": "stop", "message": {
                 "role": "assistant", "content": json.dumps(RESULT), "refusal": None}}],
         })
 
     monkeypatch.setattr(service, "load_dotenv", lambda *a, **k: None)
     monkeypatch.setenv("OPENROUTER_API_KEY", "unit-test-placeholder")
-    monkeypatch.setenv("OPENROUTER_MODEL", "openai/gpt-4o")
+    monkeypatch.setenv("OPENROUTER_MODEL", "nex-agi/nex-n2.5-mini:free")
     monkeypatch.setattr(service, "OpenAI", lambda **kwargs: OpenAI(
         **kwargs, http_client=httpx.Client(transport=httpx.MockTransport(respond))))
     assert service.triage_message(MESSAGE).model_dump() == RESULT
     output_format = captured["response_format"]
     assert captured["provider"]["require_parameters"] is True
+    assert captured["reasoning"] == {"enabled": False}
+    assert captured["model"] == "nex-agi/nex-n2.5-mini:free"
     assert output_format["type"] == "json_schema"
     assert output_format["json_schema"]["strict"] is True
     assert output_format["json_schema"]["schema"]["additionalProperties"] is False
     assert set(output_format["json_schema"]["schema"]["required"]) == set(RESULT)
+
+
+@pytest.mark.parametrize("body,headers,expected", [
+    ({"metadata":{"provider_code":429}}, {}, "model provider"),
+    ({"error":{"metadata":{"provider_code":429}}}, {}, "model provider"),
+    ({}, {"x-ratelimit-limit":"20", "x-ratelimit-remaining":"0", "retry-after":"60"}, "Retry after seconds: 60"),
+    ({"message":"secret-placeholder"}, {"retry-after":"secret-placeholder"}, "does not identify"),
+    ({"metadata":None}, {}, "does not identify"),
+])
+def test_rate_limit_diagnostics_do_not_expose_raw_data(body, headers, expected):
+    request = httpx.Request("POST", "https://openrouter.ai/api/v1/chat/completions")
+    error = RateLimitError("secret-placeholder", response=httpx.Response(429, request=request, headers=headers), body=body)
+    detail = service.rate_limit_detail(error)
+    assert expected in detail
+    assert "secret-placeholder" not in detail

@@ -1,5 +1,9 @@
 # Phase 3: first LLM integration
 
+## Selected model
+
+The default is `nex-agi/nex-n2.5-mini:free` through OpenRouter. Reasoning is disabled for this single-turn extraction task. We retain strict structured outputs and parameter-aware routing. No reasoning history or second call is needed. The free endpoint is rate-limited; live tests still contact the provider. Changing the configured model may change costs and capabilities.
+
 ## What we built
 
 POST /ai/triage accepts one synthetic Operations message and returns a classification plus explicitly stated transaction ID, amount, and currency. It does not read banking records, verify claims, investigate, recommend actions, or execute tools. Each request is independent.
@@ -39,7 +43,7 @@ flowchart LR
 - `tests/test_ai.py`: offline tests using a fake SDK client.
 - `tests/test_ai_live.py`: explicitly enabled, paid live extraction check.
 
-The model is configurable with OPENROUTER_MODEL, defaulting to openai/gpt-4o, a model supporting structured outputs. The call uses temperature 0, a 500-output-token cap, a 30-second timeout, no automatic retries, and provider.require_parameters=True so routing requires support for the requested parameters. Requests go to https://openrouter.ai/api/v1/chat/completions using the OpenAI-compatible SDK. OpenRouter and the selected provider govern data handling. There are no tools or banking-service calls in the AI service.
+The model is configurable with OPENROUTER_MODEL, defaulting to nex-agi/nex-n2.5-mini:free, a model supporting structured outputs. The call uses temperature 0, a 500-output-token cap, a 30-second timeout, no automatic retries, and provider.require_parameters=True so routing requires support for the requested parameters. Requests go to https://openrouter.ai/api/v1/chat/completions using the OpenAI-compatible SDK. OpenRouter and the selected provider govern data handling. There are no tools or banking-service calls in the AI service.
 
 The issue categories are payment_not_received, other, and unclear. Missing, unsupported, or ambiguous fields are null. Multiple transactions with no clear target are classified unclear, with null extracted fields. These are prompt instructions whose semantic accuracy still requires live evaluation.
 
@@ -159,4 +163,4 @@ Phase 3 only: basic classification and extraction with structured output. Stop h
 
 Suggested commit: `feat: add structured LLM triage with isolated AI service and tests`
 
-Official references: [Structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs), [Model capabilities](https://openrouter.ai/openai/gpt-4o).
+Official references: [Structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs), [Model capabilities](https://openrouter.ai/nex-agi/nex-n2.5-mini:free).
