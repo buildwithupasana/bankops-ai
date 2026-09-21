@@ -95,7 +95,7 @@ def test_swagger_and_openapi(client):
     response = client.get("/openapi.json")
     assert response.status_code == 200
     schema = response.json()
-    assert set(schema["paths"]) == {"/health", "/customers/{customer_id}", "/customers/{customer_id}/accounts", "/accounts/{account_id}", "/accounts/{account_id}/transactions", "/transactions/{transaction_id}"}
+    assert set(schema["paths"]) == {"/ai/triage", "/health", "/customers/{customer_id}", "/customers/{customer_id}/accounts", "/accounts/{account_id}", "/accounts/{account_id}/transactions", "/transactions/{transaction_id}"}
     transaction = schema["paths"]["/transactions/{transaction_id}"]["get"]
     assert {"200", "404", "500"} <= transaction["responses"].keys()
     assert transaction["responses"]["200"]["content"]["application/json"]["schema"]["$ref"].endswith("/Transaction")

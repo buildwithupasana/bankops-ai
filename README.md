@@ -2,6 +2,12 @@
 
 AI-Powered Banking Payment Investigation Assistant ? an incremental learning project using synthetic data only.
 
+## Phase 3: LLM classification and extraction
+
+`POST /ai/triage` classifies a synthetic complaint and extracts transaction_id, amount, and currency using OpenRouter structured outputs. It does not investigate or query banking records. See the [Phase 3 guide](docs/phase-3-guide.md) for concepts, local key setup, Swagger/PowerShell examples, and mocked versus live tests.
+
+Copy `.env.example` to `.env` only if absent, enter your key locally, and install the updated requirements. Never commit or share `.env`. Banking endpoints still work without a key. Default tests do not make paid calls; the live test requires explicit opt-in.
+
 ## Phase 2: Banking REST APIs
 
 The JSON banking service is now accessible through FastAPI. Start here: [Phase 2 learning guide](docs/phase-2-guide.md).
@@ -112,6 +118,6 @@ Unreadable files, malformed JSON, invalid list/object structure, and missing or 
 
 ## Milestone checkpoint
 
-Completed: Phase 1 JSON foundation and Phase 2 REST API. Stop after Phase 2 until its behavior and learning checklist are confirmed.
+Completed implementation: Phase 1 JSON foundation, Phase 2 REST API, and Phase 3 structured AI triage. Confirm Phase 3 live behavior and learning checklist before continuing.
 
-Suggested Git commit: `feat: expose banking lookups through FastAPI with response models and tests`
+Suggested Git commit: `feat: add structured LLM triage with isolated AI service and tests`

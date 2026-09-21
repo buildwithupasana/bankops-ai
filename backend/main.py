@@ -6,13 +6,15 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import JSONResponse
 
+from backend.ai.routes import router as ai_router
 from backend.banking.routes import router
 from backend.banking.service import BankingDataError
 
 logger = logging.getLogger(__name__)
-app = FastAPI(title="BankOps AI Banking API", version="0.2.0",
-              description="Phase 2: read-only access to fictional banking records.")
+app = FastAPI(title="BankOps AI Banking API", version="0.3.0",
+              description="Synthetic banking lookups and message-only AI triage.")
 app.include_router(router)
+app.include_router(ai_router)
 
 
 @app.exception_handler(BankingDataError)
