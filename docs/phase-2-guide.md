@@ -1,5 +1,7 @@
 # Phase 2: Banking REST APIs
 
+[Prerequisite questions, professional answers, and lessons learned](phase-2-qna.md)
+
 ## What and why
 
 Expose our existing JSON banking service through six read-only HTTP endpoints. An API is a defined interface that another program can call. A future AI application can retrieve facts through it; no AI is implemented here. HTTP APIs are useful for separating systems, but are not a requirement for every AI program.

@@ -1,5 +1,7 @@
 # Phase 1 beginner guide
 
+[Prerequisite questions, professional answers, and lessons learned](phase-1-qna.md)
+
 ## What we built and why
 
 A small, read-only banking system that answers factual questions such as "What happened to transaction TXN001?" It returns the stored facts, including PROCESSING, without inventing a cause. Later components can call these same service functions.

@@ -1,5 +1,7 @@
 # Phase 3: first LLM integration
 
+[Prerequisite questions, professional answers, and lessons learned](phase-3-qna.md)
+
 ## Selected model
 
 The default is `nex-agi/nex-n2.5-mini:free` through OpenRouter. Reasoning is disabled for this single-turn extraction task. We retain strict structured outputs and parameter-aware routing. No reasoning history or second call is needed. The free endpoint is rate-limited; live tests still contact the provider. Changing the configured model may change costs and capabilities.

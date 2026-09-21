@@ -2,6 +2,120 @@
 
 AI-Powered Banking Payment Investigation Assistant ? an incremental learning project using synthetic data only.
 
+## Learning questions and lessons learned
+
+Each implemented phase has a companion Q&A covering the concepts requested in its brief, professional explanations, and practical lessons from building and troubleshooting the project.
+
+| Phase | Prerequisite questions and lessons learned | Implementation guide |
+| --- | --- | --- |
+| 1 - Python and JSON | [Python, data relationships, error handling, and terminal lessons](docs/phase-1-qna.md) | [Phase 1 guide](docs/phase-1-guide.md) |
+| 2 - Banking REST APIs | [FastAPI, HTTP, JSON, REST, OpenAPI, Swagger, and API design lessons](docs/phase-2-qna.md) | [Phase 2 guide](docs/phase-2-guide.md) |
+| 3 - LLM integration | [LLM fundamentals, prompts, structured outputs, provider errors, and testing lessons](docs/phase-3-qna.md) | [Phase 3 guide](docs/phase-3-guide.md) |
+
+Phase 1 questions are derived from its requirements and follow-up discussion; Phases 2 and 3 cover the explicitly requested prerequisite topics. Read each question, attempt an answer, then compare with the explanation. Lessons distinguish observed results from assumptions and unverified live behavior.
+
+For each future phase, add its actual prerequisite questions and answers, implementation lessons as Q&A, and a learning checkpoint when that phase is undertaken. Phases 4-12 remain planned; no completion or lessons are claimed for them.
+
+### Phase 1: Python and JSON
+
+#### Prerequisite questions and professional answers
+
+| Question | Professional answer |
+| --- | --- |
+| What are we building with Python and JSON? | We are building a small read-only banking service. JSON files store fictional customers, accounts, and transactions; Python functions retrieve records and related collections. This establishes deterministic data access before introducing an HTTP interface or an LLM. |
+| What is JSON, and how does Python use it? | JSON is a language-independent text format for structured data. A JSON array becomes a Python list, and each JSON object becomes a dictionary. `json.load(file)` reads JSON from a file; `json.dumps(value)` converts a Python value into JSON text. A dictionary supports field access such as `transaction["status"]`. |
+| Why separate JSON data from lookup code? | Data and behavior change for different reasons. Separating them allows records to change without editing lookup functions, makes testing easier, and gives future storage changes a clear boundary. Replacing JSON with a database would still require implementation work, but callers could retain familiar service interfaces. |
+| How do we verify that a transaction belongs to the correct customer? | Find the account referenced by the transaction's account_id, confirm that the account exists, and compare its customer_id with the transaction's customer_id. Then confirm that the customer exists. For example, TXN001 refers to ACC001, which belongs to CUST001. Tests also check unique identifiers and currency consistency. These checks establish data integrity, not permission for a logged-in user to access a record. |
+| Why return None for a missing record but [] for a collection? | A single-record lookup promises one record or its absence, represented by None. A collection lookup promises a list; zero matches are represented by an empty list. Consistent return contracts simplify calling code. At the service layer, an unknown parent also produces an empty collection; the HTTP layer later adds explicit parent-existence checks. |
+| How does a missing transaction differ from a damaged JSON file? | A missing transaction means a valid dataset was searched successfully and contained no matching ID. Damaged or unreadable JSON means the search could not be completed. Returning None for both would hide operational failures. The service returns None for absence and raises BankingDataError for a loading failure. |
+| Why store money as integer minor units? | Binary floating-point values cannot represent every decimal fraction exactly. Integer minor units avoid that problem for stored amounts. In the supported two-decimal currencies, 250000 minor units represents 2500 whole units. Currency-specific rules must be considered before expanding this convention to other currencies. |
+| Why cannot PROCESSING alone explain a payment delay? | A status describes a state, not the full history or cause. PROCESSING does not establish which step is waiting, whether a deadline has passed, or whether the beneficiary received funds. A defensible explanation would require additional evidence such as events and timestamps. This phase retrieves facts without making that inference. |
+| What are modules, packages, and imports? | A Python file is a module. An __init__.py file marks a regular package containing related modules. An import makes a module's functions available in another execution context. Importing get_customer does not execute a lookup; calling get_customer("CUST001") does. |
+
+#### Lessons learned: practical Q&A
+
+| Question | Professional answer |
+| --- | --- |
+| Why did PowerShell reject the word from? | Python import syntax was entered into PowerShell. A prompt beginning with PS accepts shell commands. Start Python with `python`, wait for `>>>`, then enter the import and function call. Activating `.venv` selects a Python environment but does not start the interpreter. |
+| How do I run a Python lookup directly from PowerShell? | Use Python's `-c` option and print the result. This executes Python code without opening an interactive interpreter. |
+| What does $LASTEXITCODE mean? | It is PowerShell's stored exit code from the last native program. In our terminal demonstration, 0 means a successful lookup, 1 means a missing transaction, and 2 means an argument or banking-data error. These values describe process completion; they are not HTTP status codes. |
+| Why resolve data paths relative to the service file? | The terminal's current folder can vary. Resolving the data directory from __file__ makes data loading depend on the project's layout rather than where a caller happens to run Python. The module still needs to be importable by the caller. |
+| What did our integrity tests establish, and what did they not establish? | They checked the supplied synthetic fixtures: record counts, unique IDs, valid links, supported values, and expected lookup behavior. They did not implement full validation for arbitrary imported data, account balances, settlement, or double-entry accounting. Test scope should be stated explicitly. |
+
+Examples and learning checklist: [Phase 1 Q&A](docs/phase-1-qna.md).
+
+### Phase 2: Banking REST APIs
+
+#### Prerequisite questions and professional answers
+
+| Question | Professional answer |
+| --- | --- |
+| What is FastAPI? | FastAPI is a Python framework for building HTTP APIs. It maps methods and URL paths to Python functions and integrates validation and API documentation. In BankOps, the route accepts an identifier, calls the banking service, and returns an HTTP response. Uvicorn is the server that listens for incoming connections and runs the application. |
+| Why does an AI application need APIs? | An AI application often needs a defined interface for obtaining facts from other systems. An API lets a caller request a transaction without knowing how it is stored. It also creates a place to introduce authentication, validation, and access policies later. Not every AI application requires HTTP APIs: a local Python program can call functions directly. We introduced HTTP to establish a reusable system boundary. |
+| What is a request, and what is a response? | An HTTP request contains a method, URL, headers, and optionally a body. The response contains a status code, headers, and optionally a body. For example, GET /transactions/TXN001 asks for a transaction; a successful response contains HTTP 200 and a JSON representation of that record. |
+| What is the difference between GET and POST? | GET retrieves a resource and should not request a change to application state. POST submits data for processing or creation. Phase 2 uses GET for banking lookups. Phase 3 uses POST to submit a complaint for classification. A POST operation does not necessarily create a database record. Sensitive data should not be assumed safe merely because it is in a POST body; transport security and handling policies are separate concerns. |
+| What do HTTP status codes tell a client? | Status codes communicate the outcome at the HTTP boundary. BankOps uses 200 for successful retrieval, 404 for an unknown resource, 405 for an unsupported method, 422 for invalid request input, and 500 for server-side data failures. A caller should inspect both the code and the documented response body. HTTP status does not establish whether a payment itself succeeded. |
+| What is JSON in an API? | JSON is the serialized representation exchanged between client and server. Python dictionaries and lists become JSON objects and arrays in the response body. A Pydantic model describes the expected fields and types; it is separate from the serialized JSON and from a database table. The response typically identifies its format with Content-Type: application/json. |
+| What is REST? | REST is an architectural style organized around resources, representations, and a uniform interface. Our API applies resource-oriented URLs and standard HTTP methods: /customers/CUST001 identifies a customer, and /customers/CUST001/accounts identifies its account collection. Requests are independent rather than relying on a conversational session. Using JSON alone does not make an API RESTful. |
+| What are OpenAPI and Swagger? | OpenAPI is a machine-readable API description specifying paths, operations, parameters, schemas, and responses. Swagger UI renders that description as an interactive browser interface. In this project, /openapi.json serves the specification and /docs serves Swagger UI. The documentation is generated from the route and model declarations, but actual behavior still needs testing. |
+
+#### Lessons learned: practical Q&A
+
+| Question | Professional answer |
+| --- | --- |
+| Why keep the route separate from the banking service? | The route translates HTTP concerns: path parameters, status codes, and serialization. The service handles banking lookups and file access. This keeps the service usable from both the terminal and API and avoids coupling data logic to a web framework. |
+| Why check the parent before returning an account or transaction collection? | An unknown customer is different from a known customer with no accounts. The route checks existence so the first case returns 404 and the second returns 200 with []. The same rule applies to account transactions. This adds HTTP meaning without changing the original service return contract. |
+| Why is invalid stored output a 500 rather than a 422? | A response-model failure means the server could not fulfill its promised output contract. That is a server-side error. A request-validation failure means the client submitted input that does not satisfy the input contract and receives 422. Identifying which side violated the contract improves diagnosis. |
+| Why can curl finish successfully while displaying HTTP 404? | The command may have successfully exchanged an HTTP request and response even though the requested resource was absent. Its process exit code and the HTTP response status measure different things. Use `curl.exe -i` to inspect response headers and status rather than relying only on $LASTEXITCODE. |
+| Why do API tests not require a running Uvicorn server? | TestClient exercises the application in the test process. This makes route and response-contract testing repeatable without managing a listening server. A separate live-server smoke check verifies startup and actual HTTP access; neither kind of test replaces the other entirely. |
+| Does /health prove the data and AI provider are available? | No. It is a liveness endpoint confirming that the application can respond. It does not validate every JSON file or call an external provider. A readiness check would have a different purpose and must be designed explicitly. |
+
+Examples and learning checklist: [Phase 2 Q&A](docs/phase-2-qna.md).
+
+### Phase 3: LLM integration
+
+#### Prerequisite questions and professional answers
+
+| Question | Professional answer |
+| --- | --- |
+| What is an LLM? | A Large Language Model is a trained model that processes token sequences and generates likely continuations based on patterns learned during training and the supplied context. It can interpret language, classify complaints, and extract fields. It is not a transaction database and does not automatically access our JSON records. In this phase, its output reflects the user's statement rather than verified banking evidence. |
+| What is a prompt? | A prompt is the instructions and context supplied for a model request. Our request contains an extraction task, the Operations complaint, and a response schema. Good prompting defines the scope, allowable classifications, treatment of missing information, and prohibited inferences. Prompt instructions alone are not a guarantee that the model will follow every rule. |
+| What is a system prompt? | The system prompt contains application-controlled instructions setting the task and boundaries. Our instructions restrict the model to classification and extraction and tell it not to investigate, recommend actions, or invent facts. Keeping these instructions separate from user content makes their roles explicit. This separation does not by itself eliminate prompt-injection risks. |
+| What is a user prompt? | The user prompt is the Operations message being processed. It may contain reported facts, ambiguities, or instructions that conflict with the application's task. We treat the complaint as input data. For example, the statement that TXN001 was debited is a claim to extract, not an independently established fact. |
+| What are tokens? | Tokens are the units of text processed by the model: they may be words, fragments, punctuation, or other text segments. Token counts affect request size, latency, and usage charges where applicable. A 4,000-character input limit is not a 4,000-token limit; different text can tokenize differently. |
+| What is a context window? | The context window limits how much token context a model can handle for a request, including input and generated output within the model's rules. Input can include instructions, messages, and schemas. BankOps sends one complaint per request without conversation history. A large context window does not guarantee accurate interpretation. |
+| What is temperature? | Temperature adjusts the sampling distribution used during generation. Lower values generally reduce variation; higher values allow more varied choices. We use 0 for extraction. It does not guarantee correctness, eliminate hallucinations, or ensure identical results across all requests and provider implementations. |
+| What is hallucination? | A hallucination is generated information that is unsupported or incorrect in the task's context. Examples include inventing an amount, guessing AED from a UAE location, or claiming a delay was caused by a compliance review. Our prompt instructs the model to use null for missing or ambiguous fields. Semantic checks and evaluation remain necessary even when the response has valid JSON structure. |
+| What is structured output? | Structured output constrains a model response to a defined schema. BankOps supplies a Pydantic TriageResult through the SDK's parse method, which sends a JSON schema and parses the returned data. This is stronger than asking for JSON in prose and then searching the response for braces. Schema validation checks shape and allowed values; it cannot establish that the model extracted the correct facts. Refusals and incomplete responses also require explicit handling. |
+
+#### Lessons learned: architecture Q&A
+
+| Question | Professional answer |
+| --- | --- |
+| Why use a dedicated AI service? | The AI service owns provider configuration, prompting, request parameters, parsing, and provider-error translation. The route validates HTTP input and returns HTTP results. This separation makes provider changes and mocked tests possible without embedding SDK logic in API routes. |
+| How do OpenRouter, the OpenAI SDK, and the model differ? | OpenRouter is the gateway receiving our request and routing it to a model provider. The OpenAI Python SDK is the client library used because OpenRouter exposes a compatible interface. The selected model performs the language task. Using this SDK does not mean the request is sent directly to OpenAI: our configured base URL points to OpenRouter. |
+| Why did the model change during Phase 3? | The project first integrated OpenAI, then switched to OpenRouter at the user's request. A live check of the selected Qwen free endpoint returned an explicit upstream provider rate-limit message. The user subsequently selected Nex-N2.5-Mini. Offline tests verified the request configuration for the replacement, but those tests did not establish its live availability or extraction quality. |
+| Why use null for missing details? | Null explicitly represents unknown information. Filling an absent amount with zero or guessing a currency would turn missing evidence into a false claim. All four result keys are present, but transaction_id, amount, and currency may be null. Our narrow issue categories are payment_not_received, other, and unclear. |
+| Why can the AI extract TXN999 when no such record exists? | Extraction identifies text in the complaint. Lookup checks a data source. Phase 3 implements extraction only, so it should preserve an explicitly reported ID even when it is absent from the synthetic dataset. This distinction prevents an extraction result from being mistaken for an investigation. |
+| Why does AI output use amount 2500 while banking data uses 250000? | The extraction contract uses whole currency units to match the user's statement. The banking dataset uses integer minor units for precise storage. No financial calculation occurs in the AI service. Any future connection between the two must validate currency, precision, and conversion explicitly rather than mixing the values directly. |
+
+#### Lessons learned: troubleshooting Q&A
+
+| Question | Professional answer |
+| --- | --- |
+| Why did editing .env.example not configure the application? | .env.example is a shareable template. The service reads .env and process environment variables. A real key belongs only in the ignored local .env file or a suitable secret-management mechanism. Existing process variables take precedence because dotenv is loaded with override=False. |
+| Why can a restart or clearing a terminal variable matter? | A running process can retain an earlier environment value. Editing .env does not replace a nonempty process variable under the current loading policy. Stop the server, clear the specific terminal override when appropriate, and restart. Do not print the key to diagnose the problem. |
+| What did the initial generic 503 hide? | The initial handler grouped rejected credentials and rate limits together. Splitting upstream 401 from 429 made diagnosis more precise. The public API still returns 503 because the AI dependency is unavailable; the safe detail identifies the upstream status. A local HTTP status and a provider HTTP status describe different boundaries. |
+| What did we learn from the repeated 429 responses? | A 429 can originate from platform request limits or provider capacity. In the observed diagnostic check, the key-status endpoint accepted the key and reported 0 daily requests used with 50 remaining. A separate synthetic generation request then identified the Qwen provider's temporary upstream rate limit. That evidence identified the incident's cause; the same diagnosis should not be assumed for every future 429. |
+| Why did zero dashboard activity not resolve the diagnosis? | The screenshot showed a filtered view, not complete evidence of every attempted request. The filter might refer to a different key, and a rejected request might not appear as completed usage. We did not establish the dashboard's precise counting behavior. Direct response evidence was more useful than inferring success or failure from a blank usage summary. |
+| Why did a $100 key limit not prove that requests should work? | A key spending cap, account credit balance, daily request allowance, and provider capacity are different constraints. Raising a spending cap does not necessarily change a free endpoint's request limits or available capacity. Diagnosis should identify the failing constraint before changing account settings. |
+| How can errors be useful without exposing secrets? | Use controlled error messages, documented metadata, and narrowly validated headers such as numeric retry delays. Do not echo arbitrary raw provider bodies, request headers, or exception strings to callers. Our tests exercise error responses with secret-like placeholders to check that those values are not returned or logged by the tested paths. |
+| What should happen if a key is exposed? | Revoke the exposed key, issue a replacement, update local configuration, and restart the application. Removing a key from a later message or file does not undo exposure. Git ignore rules prevent ordinary tracking of .env, but do not protect keys copied into screenshots, chat, another tracked file, or existing history. |
+| What do mocked tests prove, and what requires a live call? | Mocks verify input validation, request parameters, SDK schema handling, error mapping, and API behavior without invoking the provider. A real-SDK test with a mocked HTTP transport also verifies serialization and parsing. Live tests are needed to check actual credentials, provider availability, schema acceptance, and model extraction behavior. One successful live example is still not a comprehensive accuracy evaluation. |
+| Why disable reasoning and avoid a second conversational call? | Our task is a small, independent extraction request. A two-turn conversation with preserved reasoning details adds state and complexity without being required by the phase objective. The implementation requests disabled reasoning and retains the four-field schema. This is an implementation choice for this milestone, not a claim that reasoning is never useful. |
+
+Examples and learning checklist: [Phase 3 Q&A](docs/phase-3-qna.md).
+
 ## Phase 3: LLM classification and extraction
 
 `POST /ai/triage` classifies a synthetic complaint and extracts transaction_id, amount, and currency using OpenRouter structured outputs. It does not investigate or query banking records. See the [Phase 3 guide](docs/phase-3-guide.md) for concepts, local key setup, Swagger/PowerShell examples, and mocked versus live tests.
